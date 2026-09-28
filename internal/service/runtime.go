@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/wyw14/solo-038/internal/color"
 	"github.com/wyw14/solo-038/internal/dryer"
 	"github.com/wyw14/solo-038/internal/folder"
 	"github.com/wyw14/solo-038/internal/ink"
@@ -49,6 +50,8 @@ type Runtime struct {
 	inkControl      *ink.Coordinator
 	register        *register.State
 	registerControl *register.Coordinator
+	color           *color.State
+	colorControl    *color.Coordinator
 	dryer           *dryer.State
 	dryerControl    *dryer.Coordinator
 	folder          *folder.State
@@ -78,10 +81,11 @@ func NewRuntime(config Config) (*Runtime, error) {
 	}
 	inkState := ink.NewState("cyan", "magenta", "yellow", "black")
 	registerState := register.NewState()
+	colorState := color.NewState()
 	folderState := folder.NewState()
 	spliceState := splice.NewState()
 	festoon := unwind.NewFestoon(config.FestoonCapacity)
-	runtime := &Runtime{startedAt: time.Now().UTC(), config: config, journal: journalStore, jobs: jobState, jobControl: job.NewCoordinator(jobState, dryerState), sensors: sensor.NewState(), unwind: unwindState, loader: unwind.NewLoader(unwindState), festoon: festoon, web: webState, webControl: web.NewCoordinator(webState, path), press: pressState, pressUnits: pressController, pressControl: press.NewCoordinator(pressController, pressState), phase: press.NewPhaseController(pressState, 2.5), ink: inkState, register: registerState, registerControl: register.NewCoordinator(registerState, journalStore), dryer: dryerState, dryerControl: dryer.NewCoordinator(dryerState), folder: folderState, folderControl: folder.NewController(folderState), splice: spliceState}
+	runtime := &Runtime{startedAt: time.Now().UTC(), config: config, journal: journalStore, jobs: jobState, jobControl: job.NewCoordinator(jobState, dryerState), sensors: sensor.NewState(), unwind: unwindState, loader: unwind.NewLoader(unwindState), festoon: festoon, web: webState, webControl: web.NewCoordinator(webState, path), press: pressState, pressUnits: pressController, pressControl: press.NewCoordinator(pressController, pressState), phase: press.NewPhaseController(pressState, 2.5), ink: inkState, register: registerState, registerControl: register.NewCoordinator(registerState, journalStore), color: colorState, colorControl: color.NewCoordinator(colorState, journalStore), dryer: dryerState, dryerControl: dryer.NewCoordinator(dryerState), folder: folderState, folderControl: folder.NewController(folderState), splice: spliceState}
 	runtime.inkControl = ink.NewCoordinator(ink.NewCircuit(inkState))
 	runtime.spliceControl = splice.NewCoordinator(spliceState, festoon, splice.NewLeaseManager())
 	return runtime, nil
