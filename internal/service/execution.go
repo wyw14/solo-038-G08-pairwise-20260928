@@ -168,7 +168,10 @@ func (runtime *Runtime) registerOperation(current model.Job) error {
 	if err != nil {
 		return err
 	}
-	current.PlateGeneration = plateGeneration
+	current = current.ChangePlate(now)
+	if err := runtime.jobs.Put(current); err != nil {
+		return err
+	}
 	if err := runtime.register.Start(current.Generation, plateGeneration, 0, now); err != nil {
 		return err
 	}

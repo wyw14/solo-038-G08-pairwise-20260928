@@ -11,6 +11,9 @@ type RecoveredState struct {
 	Job            model.Job
 	Owner          string
 	ReleasedRanges []model.Interval
+	ColorBaseline  *model.Baseline
+	ColorReleases  []ColorReleaseRecord
+	ColorSamples   int
 	EventCount     int
 }
 
@@ -46,6 +49,24 @@ func Replay(events []model.Event) (RecoveredState, error) {
 			if record.Released {
 				state.ReleasedRanges = append(state.ReleasedRanges, record.Interval)
 			}
+		case "color_baseline_established":
+			baseline, err := model.DecodeEventPayload[model.Baseline](event)
+			if err != nil {
+				return RecoveredState{}, err
+			}
+			state.ColorBaseline = &baseline
+		case "color_samples_recorded":
+			record, err := model.DecodeEventPayload[ColorSamplesRecord](event)
+			if err != nil {
+				return RecoveredState{}, err
+			}
+			state.ColorSamples += len(record.Measurements)
+		case "color_release_decided":
+			record, err := model.DecodeEventPayload[ColorReleaseRecord](event)
+			if err != nil {
+				return RecoveredState{}, err
+			}
+			state.ColorReleases = append(state.ColorReleases, record)
 		}
 	}
 	if state.EventCount > 0 && !state.Job.ID.Valid() {

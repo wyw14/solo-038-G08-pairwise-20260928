@@ -17,6 +17,7 @@ const (
 type State struct {
 	mu       sync.RWMutex
 	circuits map[string]CircuitState
+	batch    string
 }
 
 func NewState(colors ...string) *State {
@@ -48,4 +49,16 @@ func (state *State) Colors() []string {
 	}
 	sort.Strings(values)
 	return values
+}
+
+func (state *State) SetBatch(batch string) {
+	state.mu.Lock()
+	defer state.mu.Unlock()
+	state.batch = batch
+}
+
+func (state *State) Batch() string {
+	state.mu.RLock()
+	defer state.mu.RUnlock()
+	return state.batch
 }
